@@ -1,5 +1,6 @@
 #curses test
 import curses, sys
+from math import floor
 class Game():
   def __init__(self):
     self.height = 40
@@ -8,7 +9,7 @@ class Game():
     self.main.border(0)
     curses.noecho()
     self.main.keypad(1)
-    self.main.addch(self.height/2, self.width/2, "@")
+    self.main.addch(int(floor(self.height/2)), int(floor(self.width/2)), "@")
     self.main_loop()
    
   def main_loop(self):
