@@ -1,6 +1,7 @@
-#curses test
 import curses, sys
 from math import floor
+from player import Player
+
 class Game():
   def __init__(self):
     self.main = curses.initscr()
@@ -8,7 +9,8 @@ class Game():
     self.main.border(0)
     curses.noecho()
     self.main.keypad(1)
-    self.main.addch(int(floor(self.height/2)), int(floor(self.width/2)), "@")
+    self.player = Player(int(floor(self.height/2)), int(floor(self.width/2)))
+    self.main.addch(self.player.y, self.player.x, self.player.disp)
     self.main_loop()
    
   def main_loop(self):
@@ -27,22 +29,6 @@ class Game():
     curses.echo()
     curses.endwin()
     sys.exit()
-#myscreen = curses.initscr()
-
-#myscreen.border(0)
-#myscreen.addstr(12, 25, "Python curses in action!")
-#myscreen.refresh()
-#while 1:
-#    c = myscreen.getch()
-#    if c == ord('p'):
-#        myscreen.addstr(1,1,"It works!")
-#    elif c == ord('q'):
-#        break  # Exit the while()
-#    elif c == curses.KEY_HOME:
-#        x = y = 0
-
-#curses.endwin()
 
 if __name__ == "__main__":
   g = Game()
-  
