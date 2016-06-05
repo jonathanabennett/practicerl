@@ -1,34 +1,50 @@
 import curses, sys
 from math import floor
 from player import Player
+from thing import Thing
 
 class Game():
-  def __init__(self):
-    self.main = curses.initscr()
+  def __init__(self, screen):
+    self.main = screen
+    curses.curs_set(0)
+    curses.use_default_colors()
+    for i in range(0, curses.COLORS):
+      curses.init_pair(i, i, -1);
+#    self.colors = {} #Format: Coder_Friendly_Name: init_pair_number. Not yet implemented
     self.height, self.width = self.main.getmaxyx() #Gets screensize. Split this into its own function called on screen resize
     self.main.border(0)
-    curses.noecho()
-    curses.curs_set(0) #hide flashing cursor
-    self.main.keypad(1) #Enables keystrokes like KEY_UP, KEY_DOWN, etc
-    self.player = Player(int(floor(self.height/2)), int(floor(self.width/2))) #See player.py for class description
-    self.draw_thing(self.player) #Make this a draw_creature function later
+    self.things = []
+    self.things.append(Player(int(floor(self.height/2)), int(floor(self.width/2))))#See player.py for class description
+    self.things.append(Thing(int(floor(self.height/2)-5), int(floor(self.width/2)), disp="@", color=191, description="A lowly peasant"))
     self.main_loop()
-   
+    
+  def colorize(self):
+    curses.use_default_colors()
+    for i in range(0, curses.COLORS):
+      curses.init_pair(i,i,-1)
+    self.color_palette = {}
+    self.color_palette["Player"] = 0
+    self.color_palette["NPC"] = 191
+    self.color_palette["dark_wall"] = 240
+    self.color_palette["dark_floor"] = 250
   def main_loop(self):
     #This will catch and handle all keystrokes. Not too happy with if,elif,elif or case. Use a dict lookup eventually
     while 1:
+      for thing in self.things:
+        self.draw_thing(thing)
+        
       c = self.main.getch()
       self.main.addstr(self.height-1,1,str(c))
       if c == ord('p'):
-        self.main.addstr(self.height-1,1,self.player.description)
+        self.main.addstr(self.height-1,1,self.things[0].description)
       if c == curses.KEY_UP:
-        self.move_object(self.player, "North")
+        self.move_object(self.things[0], "North")
       if c == curses.KEY_DOWN:
-        self.move_object(self.player, "South")
+        self.move_object(self.things[0], "South")
       if c == curses.KEY_LEFT:
-        self.move_object(self.player, "West")
+        self.move_object(self.things[0], "West")
       if c == curses.KEY_RIGHT:
-        self.move_object(self.player, "East")
+        self.move_object(self.things[0], "East")
       elif c == ord('q'):
         self.save_game()
       elif c == curses.KEY_HOME:
@@ -57,14 +73,13 @@ class Game():
     self.main.addch(y, x, " ")
   
   def draw_thing(self, thing):
-    self.main.addch(thing.y, thing.x, thing.disp)
+    self.main.addch(thing.y, thing.x, thing.disp, curses.color_pair(thing.color))
     
   def save_game(self):
-    curses.nocbreak() #Step 1 to restore normal terminal function
-    self.main.keypad(0) #Step 2 to restore normal terminal function
-    curses.echo() #Step 3 to restore normal termainal function 
-    curses.endwin() #Sep 4 to restore normal terminal function. These 4 must be called before exit or the terminal goes weird.
     sys.exit()
 
+def loop(screen):
+  g = Game(screen)
+  
 if __name__ == "__main__":
-  g = Game() #Should I put the main loop outside the Game Object?
+  curses.wrapper(loop) #Should I put the main loop outside the Game Object?
