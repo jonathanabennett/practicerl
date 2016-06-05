@@ -11,7 +11,7 @@ class Game():
     curses.curs_set(0) #hide flashing cursor
     self.main.keypad(1) #Enables keystrokes like KEY_UP, KEY_DOWN, etc
     self.player = Player(int(floor(self.height/2)), int(floor(self.width/2))) #See player.py for class description
-    self.main.addch(self.player.y, self.player.x, self.player.disp) #Make this a draw_creature function later
+    self.draw_thing(self.player) #Make this a draw_creature function later
     self.main_loop()
    
   def main_loop(self):
@@ -33,16 +33,32 @@ class Game():
         self.save_game()
       elif c == curses.KEY_HOME:
         x = y = 0
-  def move_object(self, thing, direction):
+        
+  def move_object(self, thing, direction): 
+    """I chose to let the Game class handle redraws instead of objects.
+    I did this because it will make it easier should I ever attempt to rewrite
+    this with libtcod, pygcurses, or even some sort of browser-based thing.
+    Display is cleanly separated from obects and map data.
+    Objects use the variable name "thing" to avoid namespace collision."""
     curx = thing.x
     cury = thing.y
     newy, newx = thing.move(direction)
     if cury != newy or curx != newx:
-      self.main.addch(cury, curx, " ")
-      self.main.addch(newy, newx, thing.disp)
+      self.clear_thing(cury, curx, thing)
+      self.draw_thing(thing)
       return True
     else:
       return False
+  
+  def clear_thing(self, y, x, thing):
+    """Broken out to handle stacks of things in one location, resurrecting
+    things, and other times I don't want to just blit out the whole tile.
+    Right now, it just blits the tile though..."""
+    self.main.addch(y, x, " ")
+  
+  def draw_thing(self, thing):
+    self.main.addch(thing.y, thing.x, thing.disp)
+    
   def save_game(self):
     curses.nocbreak() #Step 1 to restore normal terminal function
     self.main.keypad(0) #Step 2 to restore normal terminal function
