@@ -11,10 +11,10 @@ class Player(Thing):
     self.color = color
     self.description = description
 
-  def move(self, direction, map=[]): #Map will be for collision detection. Put here to simplify wall walking implementation
+  def move(self, direction, map): #Map will be for collision detection. Put here to simplify wall walking implementation
     newy = self.y + directions[direction][0]
     newx = self.x + directions[direction][1]
-    if True:
+    if not map.lookup(newx,newy).blocked:
       self.x = newx
       self.y = newy
     return self.y, self.x

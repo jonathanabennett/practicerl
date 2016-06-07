@@ -15,7 +15,7 @@ class Game():
     while 1:
       c = self.main.getch()
       if c == ord('p'):
-        self.main.addstr(1,1,"It works!")
+        self.main.addstr(0,0,"It works!")
       elif c == ord('q'):
         self.save_game()
       elif c == curses.KEY_HOME:
