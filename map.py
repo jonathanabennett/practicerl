@@ -1,14 +1,12 @@
 from Tile import Tile
 
 class Map():
-  def __init__(self, height, width):
-    self.grid = [[Tile(False)
-                 for y in range(height)]
-                for x in range(width)]
-    self.grid[30][22].blocked = True
-    self.grid[30][22].block_sight = True
-    self.grid[50][22].blocked = True
-    self.grid[50][22].block_sight = True
+  def __init__(self, width, height):
+    self.width = width
+    self.height = height
+    self.grid = [[Tile(True)
+                 for x in range(height)]
+                for y in range(width)]
     
   def lookup(self, x, y):
     return self.grid[x][y]

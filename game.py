@@ -3,14 +3,21 @@ from math import floor
 from player import Player
 from thing import Thing
 from map import Map
+from level import MapGenerator
+import logging
+
+logging.basicConfig(filename="game.log", level=logging.DEBUG)
 
 class Game():
   def __init__(self, screen):
     self.main = screen
     curses.curs_set(0)
+    self.main.scrollok(0)
     self.colorize()
     self.height, self.width = self.main.getmaxyx() #Gets screensize. Split this into its own function called on screen resize
-    self.map = Map(self.height, self.width)
+    logging.info(self.height)
+    self.height -= 2
+    self.width -= 2
     self.main.border(0)
     self.things = []
     self.things.append(Player(int(floor(self.height/2)), #See player.py for
@@ -20,6 +27,7 @@ class Game():
                              disp="@",
                              color=self.color_palette["NPC"],
                              description="A lowly peasant"))
+    self.map = MapGenerator(self.width, self.height, self.things).map
     self.main_loop()
     
   def colorize(self):
@@ -37,9 +45,8 @@ class Game():
     #This will catch and handle all keystrokes. Not too happy with if,elif,elif or case. Use a dict lookup eventually
     while 1:
       self.render_all()
-        
+      
       c = self.main.getch()
-      self.main.addstr(self.height-1,1,str(c))
       if c == ord('p'):
         self.main.addstr(self.height-1,1,self.things[0].description)
       if c == curses.KEY_UP:
@@ -79,13 +86,15 @@ class Game():
                    curses.color_pair(self.color_palette["dark_floor"]))
     
   def render_all(self):
-    for y in range(self.height-1):
-      for x in range(self.width-1):
+    for y in range(self.map.height):
+      for x in range(self.map.width):
         wall = self.map.lookup(x,y).blocked
         if wall:
+#          logging.info("Drawing wall at %s, %s" % (str(x), str(y)))
           self.main.addch(y, x, " ",
                          curses.color_pair(self.color_palette["dark_wall"]))
         else:
+#          logging.info("Drawing floor at %s, %s" % (str(x), str(y)))
           self.main.addch(y, x, " ",
                          curses.color_pair(self.color_palette["dark_floor"]))
     for thing in self.things:
@@ -93,7 +102,7 @@ class Game():
   
   def draw_thing(self, thing):
     self.main.addch(thing.y, thing.x, thing.disp,
-                    curses.color_pair(thing.color))
+                    curses.color_pair(int(thing.color)))
     
   def save_game(self):
     sys.exit()
