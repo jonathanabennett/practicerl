@@ -3,6 +3,7 @@ from Tile import Tile
 from random import randint
 import logging
 from math import floor
+import beastiary
 
 logging.basicConfig(filename="example.log", level=logging.DEBUG)
 
@@ -24,9 +25,10 @@ class Rect():
             self.y1 <= other.y2 and self.y2 >= other.y1)
     
 class MapGenerator:
-  def __init__(self, maxX, maxY, things):
+  def __init__(self, maxX, maxY, things, max_residents=3):
     self.maxX = maxX
     self.maxY = maxY
+    self.max_residents = max_residents
     self.map = Map(maxX, maxY)
     logging.info("maxX, maxY = %s, %s" % (str(maxX), str(maxY)))
     self.things = things
@@ -43,9 +45,7 @@ class MapGenerator:
 
   def create_room(self,room):
     for x in range(room.x1+1, room.x2):
-      logging.info(x)
       for y in range(room.y1+1, room.y2):
-        logging.info(y)
         self.map.lookup(x,y).blocked = False
         self.map.lookup(x,y).block_sight = False
   
@@ -58,7 +58,20 @@ class MapGenerator:
     for y in range(int(floor(min(y1,y2))), int(floor(max(y1, y2)+1))):
       self.map.lookup(int(floor(x)),int(floor(y))).blocked = False
       self.map.lookup(int(floor(x)),int(floor(y))).block_sight = False
+  
+  def place_things(self, room):
+    num = randint(0, self.max_residents)
+    for n in range(num):
+      x = randint(room.x1+1, room.x2-1)
+      y = randint(room.y1+1, room.y2-1)
       
+      if randint(0, 100) < 80:
+        monster = beastiary.Orc(x, y)
+      else:
+        monster = beastiary.Troll(x,y)
+      self.things.append(monster)
+      
+  
   def create_map(self, min_size, max_size, max_rooms):
     rooms = []
     for r in range(max_rooms):
@@ -90,6 +103,7 @@ class MapGenerator:
           
         else:
           prev_x, prev_y = rooms[len(rooms)-1].center()
+          self.place_things(new_room)
           if randint(0,2) == 1:
             self.create_h_tunnel(prev_x, new_x, prev_y)
             self.create_v_tunnel(prev_y, new_y, new_x)
