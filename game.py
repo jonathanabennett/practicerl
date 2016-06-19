@@ -7,9 +7,22 @@ from level import MapGenerator
 import logging
 
 logging.basicConfig(filename="game.log", level=logging.DEBUG)
-directions = {"North":(-1,0), "South":(1,0), "East":(0,1), "West":(0,-1)}
+directions = {"North":(-1,0), "South":(1,0), "East":(0,1), "West":(0,-1),
+             "NorthWest":(-1,-1), "NorthEast":(-1,1), "SouthWest":(1,-1),
+             "SouthEast":(1,1)}
 
 class Game():
+  
+  self.keybindings = {'h': (self.move_object, (self.things[0], "North")),
+                     'j': (self.move_object, (self.things[0], "North")),
+                     'g': (self.move_object, (self.things[0], "East")),
+                     'k': (self.move_object, (self.things[0], "West")),
+                     'y': (self.move_object, (self.things[0], "NorthWest")),
+                     'u': (self.move_object, (self.things[0], "NorthEast")),
+                     'b': (self.move_object, (self.things[0], "SouthWest")),
+                     'n': (self.move_object, (self.things[0], "SouthEast"))
+                     'l': (self.look, (self.things[0],))}
+  
   def __init__(self, screen):
     self.main = screen
     curses.curs_set(0)
@@ -50,19 +63,34 @@ class Game():
       if c == ord('p'):
         self.main.addstr(self.height-1,1,self.things[0].description)
       if c == curses.KEY_UP:
-        self.move_object(self.things[0], "North", self.map)
+        self.move_object(self.things[0], "North")
       if c == curses.KEY_DOWN:
-        self.move_object(self.things[0], "South", self.map)
+        self.move_object(self.things[0], "South")
       if c == curses.KEY_LEFT:
-        self.move_object(self.things[0], "West", self.map)
+        self.move_object(self.things[0], "West")
       if c == curses.KEY_RIGHT:
-        self.move_object(self.things[0], "East", self.map)
+        self.move_object(self.things[0], "East")
       elif c == ord('q'):
         self.save_game()
       elif c == curses.KEY_HOME:
         x = y = 0
-        
-  def move_object(self, thing, direction, map): 
+  
+  def look(self, origin_thing):
+    x = origin_thing.x
+    y = origin_thing.y
+    while 1:
+      self.main.addch(x, y, "X")
+      c = self.main.getch()
+      if c == curses.ENTER:
+        for thing in things:
+          if x == thing.x and y == thing.y:
+            self.main.addstr(self.height-1,1,thing.description)
+            return True
+      elif ord(c) in ('g','h','j','k','y','u','b','n'):
+        x += directions[self.keybindings[ord(c)](1)(1)](0)
+        y += directions[self.keybindings[ord(c)](1)(1)](1)
+    
+  def move_object(self, thing, direction): 
     """I chose to let the Game class handle redraws instead of objects.
     I did this because it will make it easier should I ever attempt to rewrite
     this with libtcod, pygcurses, or even some sort of browser-based thing.
