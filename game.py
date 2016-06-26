@@ -13,16 +13,6 @@ directions = {"North":(-1,0), "South":(1,0), "East":(0,1), "West":(0,-1),
 
 class Game():
   
-  self.keybindings = {'h': (self.move_object, (self.things[0], "North")),
-                     'j': (self.move_object, (self.things[0], "North")),
-                     'g': (self.move_object, (self.things[0], "East")),
-                     'k': (self.move_object, (self.things[0], "West")),
-                     'y': (self.move_object, (self.things[0], "NorthWest")),
-                     'u': (self.move_object, (self.things[0], "NorthEast")),
-                     'b': (self.move_object, (self.things[0], "SouthWest")),
-                     'n': (self.move_object, (self.things[0], "SouthEast"))
-                     'l': (self.look, (self.things[0],))}
-  
   def __init__(self, screen):
     self.main = screen
     curses.curs_set(0)
@@ -37,6 +27,25 @@ class Game():
     self.things.append(Player(int(floor(self.height/2)), #See player.py for
                               int(floor(self.width/2)))) #class description
     self.map = MapGenerator(self.width, self.height, self.things).map
+    self.keybindings = {ord("h"): {"function":self.move_object, 
+                                   "args":{"thing":self.things[0], "direction":"North"}},
+                        ord('j'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"South"}},
+                        ord('g'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"West"}},
+                        ord('k'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"East"}},
+                        ord('y'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"NorthWest"}},
+                        ord('u'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"NorthEast"}},
+                        ord('b'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"SouthWest"}},
+                        ord('n'): {"function":self.move_object,
+                                   "args":{"thing":self.things[0], "direction":"SouthEast"}},
+                        ord('l'): {"function":self.look, "args":{"origin_thing":self.things[0],}},
+                        ord('q'): {"function":self.save_game,
+                                   "args":{"placeholder":0}}}
     self.main_loop()
     
   def colorize(self):
@@ -60,35 +69,39 @@ class Game():
       self.render_all()
       
       c = self.main.getch()
-      if c == ord('p'):
-        self.main.addstr(self.height-1,1,self.things[0].description)
-      if c == curses.KEY_UP:
-        self.move_object(self.things[0], "North")
-      if c == curses.KEY_DOWN:
-        self.move_object(self.things[0], "South")
-      if c == curses.KEY_LEFT:
-        self.move_object(self.things[0], "West")
-      if c == curses.KEY_RIGHT:
-        self.move_object(self.things[0], "East")
-      elif c == ord('q'):
-        self.save_game()
-      elif c == curses.KEY_HOME:
-        x = y = 0
+      try:
+        self.keybindings[c]["function"](**self.keybindings[c]["args"])
+      except KeyError:
+        pass
+#      if c == ord('p'):
+#        self.main.addstr(self.height-1,1,self.things[0].description)
+#      if c == curses.KEY_UP:
+#        self.move_object(self.things[0], "North")
+#      if c == curses.KEY_DOWN:
+#        self.move_object(self.things[0], "South")
+#      if c == curses.KEY_LEFT:
+#        self.move_object(self.things[0], "West")
+#      if c == curses.KEY_RIGHT:
+#        self.move_object(self.things[0], "East")
+#      elif c == ord('q'):
+#        self.save_game()
+#      elif c == curses.KEY_HOME:
+#        x = y = 0
   
   def look(self, origin_thing):
     x = origin_thing.x
     y = origin_thing.y
     while 1:
-      self.main.addch(x, y, "X")
+      self.main.addch(y,x,"X")
       c = self.main.getch()
-      if c == curses.ENTER:
+      if c == curses.KEY_ENTER:
         for thing in things:
           if x == thing.x and y == thing.y:
             self.main.addstr(self.height-1,1,thing.description)
             return True
-      elif ord(c) in ('g','h','j','k','y','u','b','n'):
-        x += directions[self.keybindings[ord(c)](1)(1)](0)
-        y += directions[self.keybindings[ord(c)](1)(1)](1)
+      elif c in (ord('g'),ord('h'),ord('j'),ord('k'),ord('y'),ord('u'),ord('b'),ord('n')):
+        x += directions[self.keybindings[c]["args"]["direction"]][0]
+        y += directions[self.keybindings[c]["args"]["direction"]][1]
     
   def move_object(self, thing, direction): 
     """I chose to let the Game class handle redraws instead of objects.
@@ -129,21 +142,21 @@ class Game():
         wall = self.map.lookup(x,y).blocked
         if wall:
 #          logging.info("Drawing wall at %s, %s" % (str(x), str(y)))
-          self.main.addch(y, x, " ",
+          self.main.addch(y+1, x+1, " ",
                          curses.color_pair(self.color_palette["dark_wall"]))
         else:
 #          logging.info("Drawing floor at %s, %s" % (str(x), str(y)))
-          self.main.addch(y, x, " ",
+          self.main.addch(y+1, x+1, " ",
                          curses.color_pair(self.color_palette["dark_floor"]))
     for thing in self.things:
       self.draw_thing(thing)
     self.draw_thing(self.things[0])
   
   def draw_thing(self, thing):
-    self.main.addch(thing.y, thing.x, thing.disp,
+    self.main.addch(thing.y+1, thing.x+1, thing.disp,
                     curses.color_pair(self.color_palette[thing.color]))
     
-  def save_game(self):
+  def save_game(self,placeholder):
     sys.exit()
 
 def loop(screen):

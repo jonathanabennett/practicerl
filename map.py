@@ -10,3 +10,9 @@ class Map():
     
   def lookup(self, x, y):
     return self.grid[x][y]
+
+  def get_neighbors(self,x,y):
+    ret = []
+    for t in self.grid[range(x-1,x+1)][range(y-1,y+1)]:
+      ret.append(t)
+    return ret
